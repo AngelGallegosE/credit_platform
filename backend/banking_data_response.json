@@ -1,0 +1,35 @@
+{
+  "name": "Carlos",
+  "lastname": "Garcia",
+  "customer_id": "CUS-458923",
+  "date": "2025-02-14T10:32:45Z",
+  "reference_id": "",
+  "country": "mexico",
+  "monthly_data": {
+    "income": 9200.50,
+    "average_expense": 1850.75
+  },
+  "active_loans": [
+    {
+      "loan_id": "LO-2023-0012",
+      "type": "personal",
+      "amount": 15000,
+      "remaining_balance": 8200,
+      "monthly_payment": 350,
+      "status": "active"
+    },
+    {
+      "loan_id": "LO-2024-0043",
+      "type": "car",
+      "amount": 22000,
+      "remaining_balance": 19800,
+      "monthly_payment": 410,
+      "status": "active"
+    }
+  ],
+  "account_status": "verified",
+  "contact": {
+    "email": "carlos.garcia@example.com",
+    "phone": "+34 600 123 456"
+  }
+}

@@ -1,0 +1,16 @@
+# SolidCable adapter works across processes, so you can trigger cable updates from
+# a separate Rails console and they will be broadcast to connected clients.
+development:
+  adapter: solid_cable
+  polling_interval: 0.1.seconds
+
+test:
+  adapter: test
+
+production:
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
