@@ -41,6 +41,14 @@ He incluido un `Makefile` en la raíz para simplificar las tareas comunes:
    make test
    ```
 
+### 🔑 Credenciales de Prueba
+Una vez ejecutadas las migraciones (que incluyen los seeds), puedes usar las siguientes cuentas:
+
+| Rol | Correo | Contraseña |
+| :--- | :--- | :--- |
+| **Admin** | `admin@gmail.com` | `asdf1234` |
+| **Usuario** | `user@gmail.com` | `asdf1234` |
+
 ---
 
 ## 🛠 Decisiones Técnicas
