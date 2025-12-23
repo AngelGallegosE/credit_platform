@@ -114,6 +114,14 @@ El proyecto utiliza los siguientes patrones que Rails incluye por defecto:
 
 ---
 
+## 📊 Métricas y Dashboards
+
+El sistema incluye un dashboard de métricas que permite visualizar y analizar el estado de las solicitudes de crédito:
+
+- **Gráfica de Barras por País:** Visualización que muestra el número de solicitudes de crédito agrupadas por país (México y Portugal) y desglosadas por estado (pendiente, aprobada, rechazada, etc.). Esta visualización permite a los administradores tener una vista rápida del volumen de solicitudes y su distribución por estado en cada región.
+
+---
+
 ## 🏗 Estrategia de Concurrencia, Colas y Webhooks
 
 - **Concurrencia:** Manejada a nivel de servidor con Puma (threads) y a nivel de workers con Sidekiq.
