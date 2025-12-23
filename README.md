@@ -1,6 +1,6 @@
 # Credit Platform - Sistema de Solicitudes de Crédito
 
-Este proyecto es una plataforma para la gestión de solicitudes de crédito, desarrollada como parte de un proceso técnico. Incluye un backend robusto en Ruby on Rails y un frontend dinámico en React (Vite).
+Incluye un backend en Ruby on Rails y un frontend dinámico en React (Vite).
 
 Se cumplio con TODA la funcionalidad requerida.
 De los extras opcionales se cumplio con 2:
@@ -56,16 +56,35 @@ Una vez ejecutadas las migraciones (que incluyen los seeds), puedes usar las sig
 - **Ruby on Rails (API Mode):** Elegido por su rapidez de desarrollo y madurez en el manejo de lógica de negocio compleja. Se utiliza en modo API para separar completamente la lógica del servidor de la interfaz.
 - **React + Vite:** Para una interfaz de usuario reactiva y rápida. Vite ofrece una experiencia de desarrollo superior comparado con CRA(create react app).
 - **Sidekiq + Redis:** Para el procesamiento asíncrono. Las validaciones de crédito y comunicaciones externas se manejan en background para no bloquear el flujo del usuario.
-- **ActionCable:** Implementado para notificaciones en tiempo real (por ejemplo, cuando el estado de una solicitud cambia tras una validación asíncrona).
+- **ActionCable (WebSockets):** Implementado para notificaciones en tiempo real. Los usuarios reciben actualizaciones automáticas cuando cambia el estado de sus solicitudes de crédito, permitiendo una experiencia reactiva sin necesidad de recargar la página.
 - **JWT (Devise + Devise-JWT):** Para autenticación stateless, permitiendo escalabilidad horizontal.
+
+---
+
+## 🎨 Patrones de Diseño
+
+### Patrones Nativos de Rails
+
+El proyecto utiliza los siguientes patrones que Rails incluye por defecto:
+
+- **Active Record Pattern:** Los modelos (`User`, `CreditApplication`, `CreditApplicationEvent`) encapsulan tanto la lógica de negocio como el acceso a la base de datos, proporcionando una interfaz orientada a objetos para las operaciones de persistencia.
+- **MVC (Model-View-Controller):** Aunque en modo API no hay vistas tradicionales, se mantiene la separación de responsabilidades: los modelos manejan la lógica de negocio, los controladores gestionan las peticiones HTTP y las respuestas JSON.
+- **Callbacks:** Utilizados en los modelos para ejecutar lógica automática en momentos específicos del ciclo de vida (por ejemplo, `before_save`, `after_create`).
+- **Scopes:** Definidos en los modelos para encapsular consultas comunes y reutilizables, mejorando la legibilidad y mantenibilidad del código.
+- **Concerns:** Módulos compartidos que permiten extraer y reutilizar lógica común entre modelos, siguiendo el principio DRY (Don't Repeat Yourself).
+
+### Patrones Adicionales Implementados
+
+- **Strategy Pattern:** Implementado para seleccionar las validaciones de crédito según el país. Cada país (México, Portugal) tiene su propia estrategia de validación, permitiendo que el sistema seleccione dinámicamente el conjunto de reglas apropiado sin modificar el código principal y que sea facil agregar mas paises.
+- **Specification Pattern:** Utilizado para disparar las validaciones específicas de cada país. Este patrón permite encapsular las reglas de negocio como especificaciones independientes y combinables, facilitando la evaluación de condiciones complejas de manera declarativa y testeable.
 
 ---
 
 ## 📊 Modelo de Datos
 
 - **User:** Gestiona la autenticación y perfiles. Tiene una relación `has_many` con `CreditApplication`.
-- **CreditApplication:** El corazón del sistema. Almacena montos, estados (enum), país y datos bancarios. Utiliza ActiveStorage para los documentos de identidad.
-- **CreditApplicationEvent:** Sistema de auditoría (logs) que registra cada cambio importante en las solicitudes para trazabilidad.
+- **CreditApplication:** El corazón del sistema. Almacena montos, estados (enum), país y datos bancarios. Utiliza ActiveStorage para los documentos de identidad. **La tabla está particionada por país** (México y Portugal) para optimizar las consultas y mejorar el rendimiento en grandes volúmenes de datos.
+- **CreditApplicationEvent:** Sistema de auditoría que registra automáticamente cada cambio en las solicitudes de crédito mediante un **trigger de base de datos**. Este trigger se ejecuta en cada modificación (INSERT, UPDATE, DELETE) de la tabla `credit_applications`, garantizando trazabilidad completa sin depender de la lógica de la aplicación.
 - **JwtDenylist:** Almacena los tokens revocados para mayor seguridad en el cierre de sesiones.
 
 ---
@@ -73,9 +92,10 @@ Una vez ejecutadas las migraciones (que incluyen los seeds), puedes usar las sig
 ## 🔒 Consideraciones de Seguridad
 
 1. **Autenticación JWT:** Tokens con tiempo de expiración y sistema de denylist para revocación inmediata al hacer logout.
-2. **Sanitización de Datos:** Rails protege automáticamente contra inyecciones SQL y ataques XSS (aunque en modo API el riesgo de XSS es menor).
-3. **Variables de Entorno:** Uso de `.env` y Secretos de Kubernetes para manejar claves sensibles (JWT secrets, DB passwords).
-4. **CORS:** Configurado específicamente para permitir solo el origen del frontend.
+2. **Control de Acceso:** Solo los usuarios con rol de administrador pueden eliminar solicitudes de crédito, garantizando la integridad de los datos y cumplimiento normativo.
+3. **Sanitización de Datos:** Rails protege automáticamente contra inyecciones SQL y ataques XSS (aunque en modo API el riesgo de XSS es menor).
+4. **Variables de Entorno:** Uso de `.env` y Secretos de Kubernetes para manejar claves sensibles (JWT secrets, DB passwords).
+5. **CORS:** Configurado específicamente para permitir solo el origen del frontend.
 
 ---
 
@@ -83,10 +103,14 @@ Una vez ejecutadas las migraciones (que incluyen los seeds), puedes usar las sig
 
 1. **Caché con Redis:** Se implementó caché de fragmentos y de bajo nivel para los conteos de analíticas, reduciendo la carga en la base de datos principal.
 2. **Índices en BD:** Las tablas de solicitudes y eventos tienen índices en columnas de búsqueda frecuente (status, country, user_id).
-3. **Escalabilidad Horizontal:**
+3. **Particionamiento por País:** La tabla `credit_applications` está particionada por país (México y Portugal), lo que permite:
+   - Consultas más rápidas al reducir el volumen de datos escaneados
+   - Mantenimiento independiente de particiones
+   - Mejor rendimiento en operaciones de lectura y escritura por región
+4. **Escalabilidad Horizontal:**
    - El backend es stateless (gracias a JWT).
    - Los manifiestos de Kubernetes incluyen `replicas: 2` y están preparados para Horizontal Pod Autoscaling (HPA).
-4. **Procesamiento Asíncrono:** El uso de Sidekiq permite manejar miles de validaciones simultáneas sin degradar la respuesta de la API.
+5. **Procesamiento Asíncrono:** El uso de Sidekiq permite manejar miles de validaciones simultáneas sin degradar la respuesta de la API.
 
 ---
 
