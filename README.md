@@ -12,7 +12,7 @@ De los extras opcionales se cumplio con 2:
 ### Requisitos Previos
 - **Ruby:** 3.4.7
 - **Node.js:** >= 18
-- **PostgreSQL:** Versión 12 o superior
+- **PostgreSQL:** Versión 14+ o superior
 - **Redis:** Para Sidekiq y ActionCable
 - **Docker/Kubectl:** (Opcional) Para despliegue en Kubernetes
 
